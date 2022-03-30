@@ -1,3 +1,5 @@
+// 4) Utilizando switch/case, escreva um programa que leia 1 letra do teclado e diga se ela é vogal ou consoante.
+
 #include <stdio.h>
 
 int main(void){

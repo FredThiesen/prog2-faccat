@@ -1,3 +1,5 @@
+// 3) Escreva um programa na linguagem C, que lê do teclado o seu nome completo e o ano de seu nascimento. Após a leitura dos dados ele deve imprimir o seu nome concatenado com a sua idade.
+
 #include <stdio.h>
 
 int main(void){
