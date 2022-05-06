@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 
 int main(void){
@@ -26,7 +25,7 @@ int main(void){
             }
         }
     }
-    
+
     fflush(stdin); // limpa o buffer para não dar problema no próximo scanf 
     printf("c ou v? ");
     scanf("%c", &opcao);
