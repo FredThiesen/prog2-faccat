@@ -16,6 +16,7 @@
 // se jogar novamente, reinicia o programa
 
 #define NAVIO_TAMANHO 5
+#define NAVIO_QTD 3
 #define TAMANHO_TABULEIRO 10
 #define LINHAS "ABCDEFGHI"
 const int COLUNAS[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -231,24 +232,31 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
 
 int main(void){
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
-    int i, j;
     char nomeJogador1[100];
     char nomeJogador2[100];
     int jogadorAtual;
     int jogada;
-    int linha, coluna;
-    int navio;
+
+    int naviosPosicionados = 0;
+
+    
+
     // pede o nome dos jogadores 1x
-    // printf("Insira o nome do jogador 1: ");
-    // scanf("%[^\n]s", nomeJogador1);
-    // printf("Insira o nome do jogador 2: ");
-    // scanf("%[^\n]s", nomeJogador2);
+    printf("Insira o nome do jogador 1: ");
+    scanf("%[^\n]s", nomeJogador1);
+    fflush(stdin);
+    printf("Insira o nome do jogador 2: ");
+    scanf("%[^\n]s", nomeJogador2);
+    fflush(stdin);
 
     inicializaTabuleiro(tabuleiro);
-
     imprimeTabuleiro(tabuleiro);
 
-    posicionaNavio(tabuleiro);
-
-
+    while(1){
+        while(naviosPosicionados < NAVIO_QTD){
+            posicionaNavio(tabuleiro);
+            naviosPosicionados++;
+        }
+    printf("navios posicionados");
+    }
 }
