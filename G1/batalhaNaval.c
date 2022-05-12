@@ -18,7 +18,7 @@
 #define NAVIO_TAMANHO 5
 #define NAVIO_QTD 3
 #define TAMANHO_TABULEIRO 10
-#define LINHAS "ABCDEFGHI"
+#define LINHAS "ABCDEFGHIJ"
 const int COLUNAS[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 
@@ -47,17 +47,34 @@ void inicializaTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     }
 }
 
-void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
+void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int posicionando, int atacando, char *jogador){
+    char linhas[] = LINHAS;
     int i, j;
-    printf("  ");
+    printf(" ----------------- TABULEIRO -----------------\n\n");
+    printf(" Turno do jogador: %s\n\n", jogador);
+    if(posicionando){
+        printf(" ------------ Posicionando navios ------------\n");
+    }else if(atacando){
+        printf(" ------------ Atacando navios ------------\n");
+    }
+    }
+    printf("   ");
     for(i = 0; i< TAMANHO_TABULEIRO; i++){
         printf(" %d  ", i + 1);
     }
     printf("\n");
     for(i = 0; i < TAMANHO_TABULEIRO; i++){
-        printf(" | ");
+        printf("%c | ", linhas[i]);
         for(j = 0; j < TAMANHO_TABULEIRO; j++){
-            printf("%d | ", tabuleiro[i][j]);
+            int valor = tabuleiro[i][j];
+            char navio = 'n';
+            char vazio = '-';
+            
+            if(valor == 1){
+                printf("%c | ", navio);
+            }else{
+                printf("%c | ", vazio);
+            }
         }
         printf("\n");
     }
@@ -68,8 +85,6 @@ void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
 int * interpretaPosicao(char *posicao){
     //precisa ser static porque o ponteiro sera usado fora da funcao
     static int posicaoInt[3];
-
-    printf("%s\n", posicao);
 
     for(int i = 0; i < TAMANHO_TABULEIRO; i++){
         if(toupper(posicao[0]) == LINHAS[i]){
@@ -149,6 +164,7 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     int direcao;
     int tamanhoNavio = 5;
     int *posicaoInt;
+    int turnoJogador = 1;
 
     int step = 1;
     //step 1: pedir a posicao e checar se é valida (existe no tabuleiro e esta livre);
@@ -162,18 +178,20 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
             if(checaStringPosicaoValida(posicao) == 0){
                 printf("Posicao invalida!\n");
                 //continue "reinicia" o laço de repeticao
-                continue;
+                break;
+            } else{
+                posicaoInt = interpretaPosicao(posicao);
+                linha = posicaoInt[0];
+                coluna = posicaoInt[1];
+                if(tabuleiro[linha][coluna] != 1){
+                    step = 2;
+                }
+                else{
+                    printf("Posicao invalida!\n");
+                }
+                printf("posicao recebida: %d %d\n", linha, coluna);
             }
-            posicaoInt = interpretaPosicao(posicao);
-            linha = posicaoInt[0];
-            coluna = posicaoInt[1];
-            if(tabuleiro[linha][coluna] != 1){
-                step = 2;
-            }
-            else{
-                printf("Posicao invalida!\n");
-            }
-            printf("posicao recebida: %d %d\n", linha, coluna);
+            
         };
     
         while(step== 2){
@@ -225,21 +243,18 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
 
     printf("\n");
 
-    imprimeTabuleiro(tabuleiro);
+    imprimeTabuleiro(tabuleiro, turnoJogador);
 
     printf("\n");
 }
 
 int main(void){
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
-    char nomeJogador1[100];
-    char nomeJogador2[100];
-    int jogadorAtual;
-    int jogada;
-
-    int naviosPosicionados = 0;
-
-    
+    char jogador1[100];
+    char jogador2[100];
+    char *jogadorAtual;
+    int turnoJogador = 1;
+    int naviosPosicionados;
 
     // pede o nome dos jogadores 1x
     printf("Insira o nome do jogador 1: ");
@@ -250,13 +265,16 @@ int main(void){
     fflush(stdin);
 
     inicializaTabuleiro(tabuleiro);
-    imprimeTabuleiro(tabuleiro);
+    imprimeTabuleiro(tabuleiro, turnoJogador, );
 
     while(1){
+        naviosPosicionados = 0;
         while(naviosPosicionados < NAVIO_QTD){
             posicionaNavio(tabuleiro);
             naviosPosicionados++;
         }
-    printf("navios posicionados");
+        break;
     }
+    printf("navios posicionados");
+    turnoJogador = 2;
 }
