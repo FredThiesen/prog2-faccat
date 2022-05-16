@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
@@ -17,6 +18,7 @@
 
 #define NAVIO_TAMANHO 5
 #define NAVIO_QTD 3
+#define TENTATIVAS_QTD 30
 #define TAMANHO_TABULEIRO 10
 #define LINHAS "ABCDEFGHIJ"
 const int COLUNAS[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -37,6 +39,16 @@ int checaNavios(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     return 0;
 }
 
+// limpa o console, funciona para windows e linux
+void limpaConsole(){
+    #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+        system("clear");
+    #endif
+
+    #if defined(_WIN32) || defined(_WIN64)
+        system("cls");
+    #endif
+}
 // funcao para inicializar a matriz de tabuleiro
 void inicializaTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     int i, j;
@@ -47,16 +59,22 @@ void inicializaTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     }
 }
 
-void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int posicionando, int atacando, char *jogador){
+void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int posicionando, char *jogador){
     char linhas[] = LINHAS;
     int i, j;
+    char navio, navioAtingido, tiroErrado, vazio;
+    limpaConsole();
     printf(" ----------------- TABULEIRO -----------------\n\n");
     printf(" Turno do jogador: %s\n\n", jogador);
     if(posicionando){
+        navio = 'N';
+        vazio = '-';
         printf(" ------------ Posicionando navios ------------\n");
-    }else if(atacando){
+    }else{
+        navioAtingido = 'X';
+        tiroErrado = '?';
+        vazio = '-';
         printf(" ------------ Atacando navios ------------\n");
-    }
     }
     printf("   ");
     for(i = 0; i< TAMANHO_TABULEIRO; i++){
@@ -64,17 +82,32 @@ void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int p
     }
     printf("\n");
     for(i = 0; i < TAMANHO_TABULEIRO; i++){
-        printf("%c | ", linhas[i]);
+        printf("%c |", linhas[i]);
         for(j = 0; j < TAMANHO_TABULEIRO; j++){
             int valor = tabuleiro[i][j];
-            char navio = 'n';
-            char vazio = '-';
             
-            if(valor == 1){
-                printf("%c | ", navio);
-            }else{
-                printf("%c | ", vazio);
+            switch(valor){
+                case 0:
+                    printf(" %c ", vazio);
+                    break;
+                case 1:
+                    if(posicionando){
+                        printf(" %c ", navio);
+                    }else{
+                        printf(" %c ", vazio);
+                    }
+                    break;
+                case 2:
+                    printf(" %c ", navioAtingido);
+                    break;
+                case 3:
+                    printf(" %c ", tiroErrado);
+                    break;
+                default:
+                    break;
             }
+
+            printf("|");
         }
         printf("\n");
     }
@@ -84,7 +117,7 @@ void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int p
 // linha, e o segundo é coluna
 int * interpretaPosicao(char *posicao){
     //precisa ser static porque o ponteiro sera usado fora da funcao
-    static int posicaoInt[3];
+    static int posicaoInt[2];
 
     for(int i = 0; i < TAMANHO_TABULEIRO; i++){
         if(toupper(posicao[0]) == LINHAS[i]){
@@ -94,9 +127,8 @@ int * interpretaPosicao(char *posicao){
     // isdigit retorna 1 se for número
     if(!isdigit(posicao[2])){
         posicaoInt[1] = COLUNAS[posicao[1] - '0' - 1];
-    }
-    else{
-        posicaoInt[1] = COLUNAS[posicao[2] - '0' - 1] + TAMANHO_TABULEIRO;
+    }else{
+        posicaoInt[1] = COLUNAS[posicao[2] - '0' - 1] + 10;
     }
     
     return posicaoInt;
@@ -108,76 +140,99 @@ int checaStringPosicaoValida(char *posicao){
     printf("checando a string %s\n", posicao);
 
     if(strlen(posicao) != 2 && strlen(posicao) != 3){
-        printf("string invalida por tamanho\n");
+        printf("posicao invalida por tamanho\n");
         return 0;
     }
 
 // checa se posicao[0] esta entre A e J
     if(!(toupper(posicao[0]) >= 'A' && toupper(posicao[0]) <= 'J')){
-        printf("string invalida por letra\n");
+        printf("posicao invalida por letra\n");
         return 0;
     }
+
 // isdigit retorna 1 se for número
     if(!isdigit(posicao[1])){
-        printf("string invalida por número\n");
+        printf("posicao invalida por número\n");
+        return 0;
+    }
+
+    if(strlen(posicao) == 3 && !isdigit(posicao[2])){
         return 0;
     }
 
     return 1;
 }
 
-int checaPosicaoValida(int direcao, int posicao[2], int tamanhoNavio, int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
+// checa se o navio cabe na posiço
+int checaPosicaoValida(int direcao, int posicao[2], int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     int linha = posicao[0], coluna = posicao[1];
 
-    if(linha < 0 || linha > 9 || (linha + tamanhoNavio) > 9){
+    if(linha < 0 || linha >= TAMANHO_TABULEIRO - 1){
         return 0;
     }
     
-    if(coluna < 0 || coluna > 9 || (coluna + tamanhoNavio) > 9){
+    if(coluna < 0 || coluna >= TAMANHO_TABULEIRO - 1){
         return 0;
     }
 
     if(direcao == 1){
         //horizontal
+        if((coluna + NAVIO_TAMANHO) > TAMANHO_TABULEIRO){
+            //navio no cabe no tabuleiro
+            return 0;
+        }
+    }
+
+    if(direcao == 2){
+        //vertical
+        if((linha + NAVIO_TAMANHO) > TAMANHO_TABULEIRO){
+            //navio no cabe no tabuleiro
+            return 0;
+        }
+    }
+
+    if(direcao == 1){
+        //horizontal
         // checa se o navio pode ser posicionado a partir dessa posicao  
-        for(int i = linha; i <= linha + tamanhoNavio; i++){
-            if(tabuleiro[i][coluna] == 1){
+        for(int j = linha; j <= coluna + NAVIO_TAMANHO; j++){
+            if(tabuleiro[linha][j] == 1){
                 return 0;
             }
         }
     }
     else if(direcao == 2){
         //vertical
-        for(int j = linha; j <= coluna + tamanhoNavio; j++){
-            if(tabuleiro[linha][j] == 1){
+        for(int i = linha; i <= linha + NAVIO_TAMANHO; i++){
+            if(tabuleiro[i][coluna] == 1){
                 return 0;
             }
         }
     }
+
+    return 1;
 }
 
 // funcao para posicionar um navio na matriz
 // tamanho 5
-void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
+void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogadorAtual){
     int linha, coluna;
     char posicao[3];
     int direcao;
-    int tamanhoNavio = 5;
     int *posicaoInt;
-    int turnoJogador = 1;
-
     int step = 1;
     //step 1: pedir a posicao e checar se é valida (existe no tabuleiro e esta livre);
     //step 2: pedir a orientacao e checar se é valida (1 ou 2) e se o comprimento (5) é valido;
     
     while(step == 1 || step == 2){
         while(step == 1){
-            printf("Digite a posicao do navio (ex: A1): ");
+            imprimeTabuleiro(tabuleiro, 1, jogadorAtual);
+            printf("\nDigite a posicao do navio (ex: A1): \n");
             scanf("%s", posicao);
+            fflush(stdin);
 
-            if(checaStringPosicaoValida(posicao) == 0){
-                printf("Posicao invalida!\n");
-                //continue "reinicia" o laço de repeticao
+            if(!checaStringPosicaoValida(posicao)){
+                printf("Posicao invalida! Pressione qualquer tecla para continuar: \n");
+                getchar();
                 break;
             } else{
                 posicaoInt = interpretaPosicao(posicao);
@@ -185,75 +240,128 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
                 coluna = posicaoInt[1];
                 if(tabuleiro[linha][coluna] != 1){
                     step = 2;
-                }
-                else{
-                    printf("Posicao invalida!\n");
-                }
-                printf("posicao recebida: %d %d\n", linha, coluna);
+                }else{
+                    printf("Posicao invalida! Pressione qualquer tecla para continuar: \n");
+                    getchar();
+                }     
             }
-            
         };
     
         while(step== 2){
-            printf("Digite a direcao do navio (1 para horizontal e 2 para vertical): ");
+            imprimeTabuleiro(tabuleiro, 1, jogadorAtual);
+            
+            printf("\nDigite a direcao do navio: \n");
+            printf("1 - HORIZONTAL\n");
+            printf("2 - VERTICAL\n");
             scanf("%d", &direcao);
+            fflush(stdin);
 
             if(direcao != 1 && direcao != 2){
                 printf("Direcao invalida!\n");
-            }
-            else{
-                if(checaPosicaoValida(direcao, posicaoInt, tamanhoNavio, tabuleiro)){
-                    step = 3;
+                printf("\nPressione qualquer tecla para continuar: \n");
+                getchar();
+                continue;
+            }else{
+                if(!checaPosicaoValida(direcao, posicaoInt, tabuleiro)){
+                    printf("O navio nao cabe nessa posicao!\n");
+                    printf("Por favor, digite outra posicao!\n");
+                    printf("\nPressione qualquer tecla para continuar: \n");
+                    getchar();
+                    step=1;
+                    continue;
                 }
             }
                 
             if(direcao == 1){
-                // horizontal
-                if(linha + tamanhoNavio > TAMANHO_TABULEIRO){
-                    printf("O navio nao cabe nessa posicao!\n");
-                    printf("Por favor, digite outra posicao!\n");
-                    step=1;
-                    continue;
-                }
-                for(int j = coluna; j < coluna + tamanhoNavio; j++){
+                //horizontal
+                for(int j = coluna; j < coluna + NAVIO_TAMANHO; j++){
                     tabuleiro[linha][j] = 1;
                 }
                 step=3;
-            }
-            else if(direcao == 2){
+            }else if(direcao == 2){
                 //vertical
-                if(coluna + tamanhoNavio > TAMANHO_TABULEIRO){
-                    printf("O navio nao cabe nessa posicao!\n");
-                    printf("Por favor, digite outra posicao!\n");
-                    step=1;
-                    continue;
-                }
-                for(int i = linha; i < linha + tamanhoNavio; i++){
+                for(int i = linha; i < linha + NAVIO_TAMANHO; i++){
                     tabuleiro[i][coluna] = 1;
                 }
                 step=3;
-            } else{
-                printf("Direcao invalida!\n");
             }
         };
     }
-    
+}
 
-    
+void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogadorAtual, int tentativa){
+    int linha, coluna;
+    char posicao[3];
+    int *posicaoInt;
+    int acertou = 0;
+    int step = 1;
 
-    printf("\n");
+    while(step == 1){
+        imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
+        printf("\n TENTATIVA %d\n", tentativa);
+        printf("\nDigite a posicao do tiro (ex: A1): \n");
+        scanf("%s", posicao);
+        fflush(stdin);
 
-    imprimeTabuleiro(tabuleiro, turnoJogador);
+        if(!checaStringPosicaoValida(posicao)){
+            printf("\nPosicao invalida! Pressione qualquer tecla para continuar: \n");
+            getchar();
+            break;
+        } else{
+            posicaoInt = interpretaPosicao(posicao);
+            linha = posicaoInt[0];
+            coluna = posicaoInt[1];
+            if(tabuleiro[linha][coluna] == 1){
+                acertou = 1;
+                step = 2;
+            }else if(tabuleiro[linha][coluna] == 2 || tabuleiro[linha][coluna] == 3){
+                printf("\nVoce ja atirou nessa posicao, tente novamente! \n");
+                printf("\nPressione qualquer tecla para continuar: \n");
+                getchar();
+                break;
 
-    printf("\n");
+            }else if(tabuleiro[linha][coluna] == 0){
+                printf("\nVoce errou!\n");
+                acertou = 0;
+                step = 2;
+                printf("\nPressione qualquer tecla para continuar: \n");
+                getchar();
+                break;
+            }
+            else{
+                printf("Posicao invalida! Pressione qualquer tecla para continuar: \n");
+                getchar();
+                break;
+            }   
+        }
+    };
+            
+    if(acertou){
+        tabuleiro[linha][coluna] = 2;
+        imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
+        printf("\nAcertou!\n");
+    }else{
+        imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
+        tabuleiro[linha][coluna] = 3;
+        imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
+        printf("\nErrou!\n");
+    }
+    step = 3;
 }
 
 int main(void){
+    // posição do tabuleiro pode ter 4 valores:
+    // 0 - sem navio
+    // 1 - com navio
+    // 2 - navio atingido
+    // 3 - tiro errado
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
-    char jogador1[100];
-    char jogador2[100];
+    char nomeJogador1[100];
+    char nomeJogador2[100];
     char *jogadorAtual;
-    int turnoJogador = 1;
+
+    // 1 enquanto jogador está posicionando navios, 0 enquanto está atacando
+    int posicionando = 1;
     int naviosPosicionados;
 
     // pede o nome dos jogadores 1x
@@ -264,17 +372,31 @@ int main(void){
     scanf("%[^\n]s", nomeJogador2);
     fflush(stdin);
 
-    inicializaTabuleiro(tabuleiro);
-    imprimeTabuleiro(tabuleiro, turnoJogador, );
+    jogadorAtual = nomeJogador1;
 
     while(1){
+        inicializaTabuleiro(tabuleiro);
+
+        //
+        // Seção de posicionar navios
         naviosPosicionados = 0;
         while(naviosPosicionados < NAVIO_QTD){
-            posicionaNavio(tabuleiro);
+            posicionaNavio(tabuleiro, jogadorAtual);
             naviosPosicionados++;
         }
+        imprimeTabuleiro(tabuleiro, 1, jogadorAtual);
+        printf("\nNavios posicionados! Pressione qualquer tecla para continuar: \n");
+        getchar();
+        posicionando = 0;
+
+        //
+        // Seção de atacar navios
+        for(int tentativa = 1; tentativa <= TENTATIVAS_QTD; tentativa++){
+            atacaNavio(tabuleiro, jogadorAtual, tentativa);
+            //checa se tem navio ou se as tentativas acabaram
+        }
+        printf("fim de jogo");
         break;
     }
-    printf("navios posicionados");
-    turnoJogador = 2;
+
 }
