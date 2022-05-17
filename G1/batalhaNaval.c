@@ -14,13 +14,15 @@
 // se nao houver navios, o jogador 2 venceu
 
 // loop para pedir opcao de jogar novamente ou sair
-// se jogar novamente, reinicia o programa
+// se jogar novamente, reinicia o programa e troca os jogadores
 
 #define NAVIO_TAMANHO 5
 #define NAVIO_QTD 3
 #define TENTATIVAS_QTD 30
-#define TAMANHO_TABULEIRO 10
-#define LINHAS "ABCDEFGHIJ"
+#define TAMANHO_TABULEIRO 20
+
+// se você alterar o tamanho do tabuleiro, altere as linhas abaixo.
+#define LINHAS "ABCDEFGHIJKLMNOPQRST"
 const int COLUNAS[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 
@@ -78,7 +80,11 @@ void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int p
     }
     printf("   ");
     for(i = 0; i< TAMANHO_TABULEIRO; i++){
-        printf(" %d  ", i + 1);
+        if(i < 9){
+            printf(" %d  ", i+1);
+        }else{
+            printf(" %d ", i+1);
+        }
     }
     printf("\n");
     for(i = 0; i < TAMANHO_TABULEIRO; i++){
@@ -134,8 +140,6 @@ int * interpretaPosicao(char *posicao){
         posicaoInt[1] = COLUNAS[posicao[1] - '0' - 1];
     }else{
         int c = concatenaDoisInteiros(posicao[1] - '0', posicao[2] - '0');
-        printf("%d\n", c);
-        getchar();
         posicaoInt[1] = c - 1;
     }
     
@@ -148,22 +152,20 @@ int checaStringPosicaoValida(char *posicao){
     char primeiraLinha = LINHAS[0];
     char ultimaLinha = LINHAS[TAMANHO_TABULEIRO - 1];
 
-    printf("checando a string %s\n", posicao);
-
     if(strlen(posicao) != 2 && strlen(posicao) != 3){
-        printf("posicao invalida por tamanho\n");
+        //posicao invalida por tamanho
         return 0;
     }
 
-// checa se posicao[0] esta entre a primeira e a ultima letra de LINHAS
+    // checa se posicao[0] esta entre a primeira e a ultima letra de LINHAS
     if(!(toupper(posicao[0]) >= primeiraLinha && toupper(posicao[0]) <= ultimaLinha)){
-        printf("posicao invalida por letra\n");
+        //posicao invalida por letra\n
         return 0;
     }
 
-// isdigit retorna 1 se for número
+    // isdigit retorna 1 se for número
     if(!isdigit(posicao[1])){
-        printf("posicao invalida por número\n");
+        //posicao invalida por número
         return 0;
     }
 
@@ -172,7 +174,7 @@ int checaStringPosicaoValida(char *posicao){
     }
     if(isdigit(posicao[2])){
         int c = concatenaDoisInteiros(posicao[1] - '0', posicao[2] - '0');
-        if((c - 1) > TAMANHO_TABULEIRO){
+        if(c > TAMANHO_TABULEIRO){
             return 0;
         }
     }
@@ -251,7 +253,6 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *j
             if(!checaStringPosicaoValida(posicao)){
                 printf("Posicao invalida! Pressione qualquer tecla para continuar: \n");
                 getchar();
-                break;
             } else{
                 posicaoInt = interpretaPosicao(posicao);
                 linha = posicaoInt[0];
@@ -324,7 +325,6 @@ void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogad
         if(!checaStringPosicaoValida(posicao)){
             printf("\nPosicao invalida! Pressione qualquer tecla para continuar: \n");
             getchar();
-            break;
         } else{
             posicaoInt = interpretaPosicao(posicao);
             linha = posicaoInt[0];
@@ -375,6 +375,7 @@ int main(void){
     char nomeJogador1[100];
     char nomeJogador2[100];
     char *jogadorAtual;
+    int opcao; // 1 - jogar novamente, 2 - sair
 
     // 1 enquanto jogador está posicionando navios, 0 enquanto está atacando
     int posicionando = 1;
