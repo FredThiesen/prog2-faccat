@@ -21,13 +21,13 @@
 #define TENTATIVAS_QTD 30
 #define TAMANHO_TABULEIRO 20
 
-// se você alterar o tamanho do tabuleiro, altere as linhas abaixo.
+// se você alterar o tamanho do tabuleiro, altere as linhas e colunas abaixo.
 #define LINHAS "ABCDEFGHIJKLMNOPQRST"
-const int COLUNAS[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+const int COLUNAS[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 
 
 // funcao para checar se ha navios na matriz
-// retorna 1 se houver navios na matriz
+// retorna 1 se houver navios não destruídos na matriz
 // retorna 0 se nao houver navios na matriz
 int checaNavios(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     int i, j;
@@ -330,21 +330,15 @@ void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogad
             linha = posicaoInt[0];
             coluna = posicaoInt[1];
             if(tabuleiro[linha][coluna] == 1){
-                printf("\nAcertou!\n");
                 acertou = 1;
                 step = 2;
-                printf("\nPressione qualquer tecla para continuar: \n");
-                getchar();
             }else if(tabuleiro[linha][coluna] == 2 || tabuleiro[linha][coluna] == 3){
                 printf("\nVoce ja atirou nessa posicao, tente novamente! \n");
                 printf("\nPressione qualquer tecla para continuar: \n");
                 getchar();
             }else if(tabuleiro[linha][coluna] == 0){
-                printf("\nVoce errou!\n");
                 acertou = 0;
                 step = 2;
-                printf("\nPressione qualquer tecla para continuar: \n");
-                getchar();
             }else{
                 printf("Posicao invalida! Pressione qualquer tecla para continuar: \n");
                 getchar();
@@ -356,13 +350,24 @@ void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogad
         tabuleiro[linha][coluna] = 2;
         imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
         printf("\nAcertou!\n");
+        printf("\nPressione qualquer tecla para continuar: \n");
+        getchar();
     }else{
-        imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
         tabuleiro[linha][coluna] = 3;
         imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
-        printf("\nErrou!\n");
+        printf("\nVoce errou!\n");
+        printf("\nPressione qualquer tecla para continuar: \n");
+        getchar();
     }
     step = 3;
+}
+
+char *trocaJogador (char *jogadorAtual, char jogador1[], char jogador2[]){
+    if(strcmp(jogadorAtual, jogador1) == 0){
+        return jogador2;
+    }else{
+        return jogador1;
+    }
 }
 
 int main(void){
@@ -375,7 +380,8 @@ int main(void){
     char nomeJogador1[100];
     char nomeJogador2[100];
     char *jogadorAtual;
-    int opcao; // 1 - jogar novamente, 2 - sair
+    int opcao = 1; // 1 - jogar novamente, 2 - sair
+    int vencedor = 0; // 1 - jogador 1 venceu, 2 - jogador 2 venceu
 
     // 1 enquanto jogador está posicionando navios, 0 enquanto está atacando
     int posicionando = 1;
@@ -391,11 +397,12 @@ int main(void){
 
     jogadorAtual = nomeJogador1;
 
-    while(1){
+    while(opcao == 1){
         inicializaTabuleiro(tabuleiro);
 
         //
         // Seção de posicionar navios
+        posicionando = 1;
         naviosPosicionados = 0;
         while(naviosPosicionados < NAVIO_QTD){
             posicionaNavio(tabuleiro, jogadorAtual);
@@ -406,14 +413,38 @@ int main(void){
         getchar();
         posicionando = 0;
 
+        jogadorAtual = trocaJogador(jogadorAtual, nomeJogador1, nomeJogador2);
+
         //
         // Seção de atacar navios
         for(int tentativa = 1; tentativa <= TENTATIVAS_QTD; tentativa++){
             atacaNavio(tabuleiro, jogadorAtual, tentativa);
             //checa se tem navio ou se as tentativas acabaram
+            if(!checaNavios(tabuleiro)){
+                printf("\nParabens %s, voce venceu!\n", jogadorAtual);
+                vencedor = 1;
+                break;
+            }
         }
-        printf("fim de jogo");
-        break;
+        if(!vencedor){
+            printf("\n%s, voce perdeu!\n", jogadorAtual);
+        }
+        do{
+            printf("\nDeseja jogar novamente?\n");
+            printf("1 - Sim\n");
+            printf("2 - Nao\n");
+            scanf("%d", &opcao);
+            fflush(stdin);
+            if(opcao != 1 && opcao != 2){
+                printf("\nOpcao invalida!\n");
+            }
+        }while(opcao != 1 && opcao != 2);
+        if(opcao == 2){
+            break;
+        }
     }
-
+    printf("fim de jogo");
+    printf("pressione qualquer tecla para continuar: ");
+    getchar();
+    return 0;
 }
