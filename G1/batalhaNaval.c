@@ -113,6 +113,11 @@ void imprimeTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], int p
     }
 }
 
+int concatenaDoisInteiros(int a, int b){
+    char str[10];
+    sprintf(str, "%d%d", a, b);
+    return atoi(str);
+}
 // retorna um array de coordenada, onde o primeiro elemento é
 // linha, e o segundo é coluna
 int * interpretaPosicao(char *posicao){
@@ -128,7 +133,10 @@ int * interpretaPosicao(char *posicao){
     if(!isdigit(posicao[2])){
         posicaoInt[1] = COLUNAS[posicao[1] - '0' - 1];
     }else{
-        posicaoInt[1] = COLUNAS[posicao[2] - '0' - 1] + 10;
+        int c = concatenaDoisInteiros(posicao[1] - '0', posicao[2] - '0');
+        printf("%d\n", c);
+        getchar();
+        posicaoInt[1] = c - 1;
     }
     
     return posicaoInt;
@@ -137,6 +145,9 @@ int * interpretaPosicao(char *posicao){
 //checa se uma string de posicao (exemplo: "A1") é valida
 int checaStringPosicaoValida(char *posicao){
 
+    char primeiraLinha = LINHAS[0];
+    char ultimaLinha = LINHAS[TAMANHO_TABULEIRO - 1];
+
     printf("checando a string %s\n", posicao);
 
     if(strlen(posicao) != 2 && strlen(posicao) != 3){
@@ -144,8 +155,8 @@ int checaStringPosicaoValida(char *posicao){
         return 0;
     }
 
-// checa se posicao[0] esta entre A e J
-    if(!(toupper(posicao[0]) >= 'A' && toupper(posicao[0]) <= 'J')){
+// checa se posicao[0] esta entre a primeira e a ultima letra de LINHAS
+    if(!(toupper(posicao[0]) >= primeiraLinha && toupper(posicao[0]) <= ultimaLinha)){
         printf("posicao invalida por letra\n");
         return 0;
     }
@@ -159,6 +170,13 @@ int checaStringPosicaoValida(char *posicao){
     if(strlen(posicao) == 3 && !isdigit(posicao[2])){
         return 0;
     }
+    if(isdigit(posicao[2])){
+        int c = concatenaDoisInteiros(posicao[1] - '0', posicao[2] - '0');
+        if((c - 1) > TAMANHO_TABULEIRO){
+            return 0;
+        }
+    }
+            
 
     return 1;
 }
@@ -167,11 +185,11 @@ int checaStringPosicaoValida(char *posicao){
 int checaPosicaoValida(int direcao, int posicao[2], int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]){
     int linha = posicao[0], coluna = posicao[1];
 
-    if(linha < 0 || linha >= TAMANHO_TABULEIRO - 1){
+    if(linha < 0 || linha > TAMANHO_TABULEIRO - 1){
         return 0;
     }
     
-    if(coluna < 0 || coluna >= TAMANHO_TABULEIRO - 1){
+    if(coluna < 0 || coluna > TAMANHO_TABULEIRO - 1){
         return 0;
     }
 
@@ -194,7 +212,7 @@ int checaPosicaoValida(int direcao, int posicao[2], int tabuleiro[TAMANHO_TABULE
     if(direcao == 1){
         //horizontal
         // checa se o navio pode ser posicionado a partir dessa posicao  
-        for(int j = linha; j <= coluna + NAVIO_TAMANHO; j++){
+        for(int j = coluna; j <= coluna + NAVIO_TAMANHO; j++){
             if(tabuleiro[linha][j] == 1){
                 return 0;
             }
@@ -312,26 +330,24 @@ void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogad
             linha = posicaoInt[0];
             coluna = posicaoInt[1];
             if(tabuleiro[linha][coluna] == 1){
+                printf("\nAcertou!\n");
                 acertou = 1;
                 step = 2;
+                printf("\nPressione qualquer tecla para continuar: \n");
+                getchar();
             }else if(tabuleiro[linha][coluna] == 2 || tabuleiro[linha][coluna] == 3){
                 printf("\nVoce ja atirou nessa posicao, tente novamente! \n");
                 printf("\nPressione qualquer tecla para continuar: \n");
                 getchar();
-                break;
-
             }else if(tabuleiro[linha][coluna] == 0){
                 printf("\nVoce errou!\n");
                 acertou = 0;
                 step = 2;
                 printf("\nPressione qualquer tecla para continuar: \n");
                 getchar();
-                break;
-            }
-            else{
+            }else{
                 printf("Posicao invalida! Pressione qualquer tecla para continuar: \n");
                 getchar();
-                break;
             }   
         }
     };
