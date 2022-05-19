@@ -14,9 +14,8 @@ int fibonacci(int n) {
 }
 
 void main() {
-   int n, valor = 2;
-	 for (n = 0; n < valor; n++) {
-      printf("%d ", fibonacci(n));
-   }
-   printf("\nexecutado %d vezes\n", cont);
+   int n, valor = 8;
+fibonacci(valor);
+   
+   printf("\nPara o Fibonacci de 8, a funcao foi executada %d vezes.\n", cont);
 }
