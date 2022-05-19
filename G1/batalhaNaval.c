@@ -308,7 +308,7 @@ void posicionaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *j
     }
 }
 
-void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogadorAtual, int tentativa){
+void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogadorAtual, int tentativa, int posicoesAcertadas[2], int numeroJogador){
     int linha, coluna;
     char posicao[3];
     int *posicaoInt;
@@ -349,6 +349,7 @@ void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogad
     if(acertou){
         tabuleiro[linha][coluna] = 2;
         imprimeTabuleiro(tabuleiro, 0, jogadorAtual);
+        posicoesAcertadas[numeroJogador]++;
         printf("\nAcertou!\n");
         printf("\nPressione qualquer tecla para continuar: \n");
         getchar();
@@ -359,6 +360,7 @@ void atacaNavio(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO], char *jogad
         printf("\nPressione qualquer tecla para continuar: \n");
         getchar();
     }
+    
     step = 3;
 }
 
@@ -379,9 +381,14 @@ int main(void){
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
     char nomeJogador1[100];
     char nomeJogador2[100];
+    int numeroJogador = 0;
     char *jogadorAtual;
     int opcao = 1; // 1 - jogar novamente, 2 - sair
+    char opcaoLimpaTela = 'a';
     int vencedor = 0; // 1 - jogador 1 venceu, 2 - jogador 2 venceu
+    int rodadasGanhas[2] = {0,0}; // 0 - jogador 1, 1 - jogador 2
+    int posicoesAcertadas[2] = {0,0}; // 0 - jogador 1, 1 - jogador 2
+    
 
     // 1 enquanto jogador está posicionando navios, 0 enquanto está atacando
     int posicionando = 1;
@@ -408,28 +415,49 @@ int main(void){
             posicionaNavio(tabuleiro, jogadorAtual);
             naviosPosicionados++;
         }
-        imprimeTabuleiro(tabuleiro, 1, jogadorAtual);
-        printf("\nNavios posicionados! Pressione qualquer tecla para continuar: \n");
-        getchar();
+        while(toupper(opcaoLimpaTela) != 'V'){
+            imprimeTabuleiro(tabuleiro, 1, jogadorAtual);
+            printf("\nNavios posicionados! Pressione a tecla V para limpar a tela: \n");
+            scanf("%c", &opcaoLimpaTela);
+             fflush(stdin);
+            if(toupper(opcaoLimpaTela) != 'V'){
+                printf("\nOpcao invalida!\n");
+                printf("\nPressione qualquer tecla para continuar: \n");
+                getchar();
+            }
+        }
+        opcaoLimpaTela = 'a';
+        
         posicionando = 0;
 
         jogadorAtual = trocaJogador(jogadorAtual, nomeJogador1, nomeJogador2);
+        numeroJogador = (strcmp(jogadorAtual, nomeJogador1) == 0) ? 0 : 1;
 
         //
         // Seção de atacar navios
         for(int tentativa = 1; tentativa <= TENTATIVAS_QTD; tentativa++){
-            atacaNavio(tabuleiro, jogadorAtual, tentativa);
+            atacaNavio(tabuleiro, jogadorAtual, tentativa, posicoesAcertadas, numeroJogador);
             //checa se tem navio ou se as tentativas acabaram
             if(!checaNavios(tabuleiro)){
                 printf("\nParabens %s, voce venceu!\n", jogadorAtual);
+                // soma um no array de rodadasGanhas
+                rodadasGanhas[numeroJogador]++;
                 vencedor = 1;
                 break;
             }
         }
         if(!vencedor){
             printf("\n%s, voce perdeu!\n", jogadorAtual);
+            // soma um no array de rodadasGanhas
+            rodadasGanhas[numeroJogador]++;
         }
         do{
+            printf("\nRodada terminada!\n\n");
+            printf("\n\nJogador 1 (%s) ganhou %d vezes\n",nomeJogador1, rodadasGanhas[0]);
+            printf("Jogador 1 (%s) acertou %d posicoes\n",nomeJogador1, posicoesAcertadas[0]);
+
+            printf("\n\nJogador 2 (%s) ganhou %d vezes\n",nomeJogador2, rodadasGanhas[1]);
+            printf("Jogador 2 (%s) acertou %d posicoes\n",nomeJogador2, posicoesAcertadas[1]);
             printf("\nDeseja jogar novamente?\n");
             printf("1 - Sim\n");
             printf("2 - Nao\n");
