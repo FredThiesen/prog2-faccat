@@ -1,10 +1,10 @@
 Crie um programa para registrar cadastros de pessoas. Ele deverá salvar em um arquivo texto (extensão .txt) o nome e idade de cada indivíduo, separado por vírgula. Cada registro deverá ser salvo em uma linha diferente do mesmo arquivo.
 
-Exemplo de conteúdo do arquivo:
-João da Silva, 30
-Maria de Oliveira, 25
-Ana Souza, 20
-José da Silva, 40
+Exemplo de conteúdo do arquivo:<br />
+João da Silva, 30<br />
+Maria de Oliveira, 25<br />
+Ana Souza, 20<br />
+José da Silva, 40<br />
 
 Toda vez que o programa ser executado, ele deverá apresentar o seguinte texto e perguntar:
 
@@ -16,8 +16,8 @@ Digite a opção desejada:
 
 Caso a opção 1 seja escolhida, o programa deverá imprimir em tela todo o conteúdo do arquivo. Caso a opção 2 seja escolhida, o programa deverá imprimir em tela os dados de um registro no seguinte formato de saída:
 
-Nome: João da Silva
-Idade: 30 anos
+Nome: João da Silva<br />
+Idade: 30 anos<br />
 
 Lembrando que o usuário deverá informar qual linha a ser lida (que é o equivalente ao registro).
 
