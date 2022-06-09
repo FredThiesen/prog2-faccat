@@ -11,18 +11,12 @@ struct aluno {
 typedef struct aluno Aluno;
 
 int imprimirArquivo();
-int cadastraAluno(Aluno *aluno);
+int cadastrarAluno(Aluno *aluno);
 int buscarNoArquivo(int numeroRegistro);
-// int imprimirAluno(Aluno *aluno);
+void imprimirAluno(Aluno aluno);
+int imprimirEstatisticas();
 
 // limpa o console, funciona para windows e linux
-void limpaBuffer() {
-    int ch;
-    do {
-        ch = fgetc(stdin);
-    } while (ch != EOF && ch != '\n');
-}
-
 void limpaConsole() {
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     system("clear");
@@ -58,26 +52,34 @@ int main(void) {
                 getchar();
                 break;
             case 2:
-                printf("Digite o numero do registro que deseja buscar: ");
-                scanf("%d", &operacao);
+                printf("Digite o numero da matricula do aluno que deseja buscar: ");
+                scanf("%d", &aluno.matricula);
                 fflush(stdin);
-                buscarNoArquivo(operacao);
+                buscarNoArquivo(aluno.matricula);
                 printf("\nPressione qualquer tecla para continuar\n");
                 getchar();
                 break;
             case 3:
                 printf("Digite o nome do aluno: ");
                 scanf("%[^\n]", aluno.nome);
-                limpaBuffer();
+                fflush(stdin);
                 printf("Digite a matricula do aluno: ");
                 scanf("%d", &aluno.matricula);
-                limpaBuffer();
+                fflush(stdin);
                 printf("Digite a nota final: ");
                 scanf("%f", &aluno.notaFinal);
-                limpaBuffer();
-                cadastraAluno(alunoPtr);
+                fflush(stdin);
+                cadastrarAluno(alunoPtr);
+                printf("\nPressione qualquer tecla para continuar\n");
+                getchar();
                 break;
             case 4:
+                imprimirEstatisticas();
+                printf("\nPressione qualquer tecla para continuar\n");
+                getchar();
+                break;
+            case 5:
+                printf("\nFechando o programa...\n");
                 printf("\nPressione qualquer tecla para continuar\n");
                 getchar();
                 break;
@@ -87,62 +89,44 @@ int main(void) {
     return 0;
 }
 
-int cadastraAluno(Aluno *aluno) {
+int cadastrarAluno(Aluno *aluno) {
     FILE *arquivo;
-
-    arquivo = fopen("arquivo.dat", "ab");
+    arquivo = fopen("arquivo.dat", "ab+");
 
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo!");
+        printf("Nao foi possivel abrir o arquivo.");
+        fclose(arquivo);
         return 0;
+    } else {
+        fwrite(aluno, sizeof(Aluno), 1, arquivo);
+        fclose(arquivo);
+        printf("\nAluno cadastrado com sucesso!\n");
+        return 1;
     }
-
-    fwrite(&aluno, sizeof(Aluno), 1, arquivo);
-
-    fclose(arquivo);
-    return 1;
 }
 
-// int imprimirAluno(Aluno *aluno) {
-//     FILE *arquivo;
-
-//     arquivo = fopen("arquivo.dat", "rb");
-
-//     if (arquivo == NULL) {
-//         printf("Erro ao abrir o arquivo!");
-//         return 0;
-//     }
-
-//     while (fread(&aluno, sizeof(Aluno), 1, arquivo) == 1) {
-//         printf("Nome: %s\n", aluno.nome);
-//         printf("Matricula: %d\n", aluno.matricula);
-//         printf("Nota final: %f\n", aluno.notaFinal);
-//     }
-
-//     fclose(arquivo);
-//     return 1;
-// }
+void imprimirAluno(Aluno aluno) {
+    printf("Nome: %s\n", aluno.nome);
+    printf("Matricula: %d\n", aluno.matricula);
+    printf("Nota final: %.2f\n\n", aluno.notaFinal);
+}
 
 int imprimirArquivo() {
     FILE *arquivo;
     Aluno aluno;
-    Aluno *alunoPtr = &aluno;
-    char nome[50];
-    int idade;
 
     arquivo = fopen("arquivo.dat", "ab+");
 
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo!");
+        fclose(arquivo);
         return 0;
     }
 
     // assing to aluno,
     // call imprimirAluno for each entry
-    while (fread(&aluno, sizeof(Aluno), 1, arquivo) == 1) {
-        printf("Nome: %s\n", aluno.nome);
-        printf("Matricula: %d\n", aluno.matricula);
-        printf("Nota final: %f\n\n\n", aluno.notaFinal);
+    while (fread(&aluno, sizeof(Aluno), 1, arquivo)) {
+        imprimirAluno(aluno);
     }
 
     fclose(arquivo);
@@ -151,24 +135,82 @@ int imprimirArquivo() {
 int buscarNoArquivo(int numeroMatricula) {
     FILE *arquivo;
     Aluno aluno;
-    char nome[50];
-    int matricula;
-    float notaFinal;
+    int alunoEncontrado = 0;
 
     arquivo = fopen("arquivo.dat", "ab+");
 
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo!");
+        fclose(arquivo);
         return 0;
     }
 
-    while (fread(&aluno, sizeof(Aluno), 1, arquivo) == 1) {
+    while (fread(&aluno, sizeof(Aluno), 1, arquivo)) {
         if (aluno.matricula == numeroMatricula) {
-            printf("Nome: %s\n", aluno.nome);
-            printf("Matricula: %d\n", aluno.matricula);
-            printf("Nota final: %f\n", aluno.notaFinal);
+            imprimirAluno(aluno);
+            fclose(arquivo);
+            return 1;
         }
     }
 
+    if (!alunoEncontrado) {
+        printf("Aluno nao encontrado!");
+    }
+
     fclose(arquivo);
+}
+
+int imprimirEstatisticas() {
+    FILE *arquivo;
+    Aluno aluno;
+
+    arquivo = fopen("arquivo.dat", "ab+");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!");
+        fclose(arquivo);
+        return 0;
+    }
+    // Quantidade de alunos existentes no arquivo
+    // Média da turma
+    // Nome do aluno com a menor nota
+    // Nome do aluno com a maior nota
+
+    int quantidadeAlunos = 0;
+    float somaNotas = 0;
+    float media = 0;
+    float notaMenor = 100.1;
+    float notaMaior = -0.1;
+    char nomeMenor[50];
+    char nomeMaior[50];
+
+    while (fread(&aluno, sizeof(Aluno), 1, arquivo)) {
+        quantidadeAlunos++;
+        somaNotas += aluno.notaFinal;
+        if (aluno.notaFinal < notaMenor) {
+            notaMenor = aluno.notaFinal;
+            strcpy(nomeMenor, aluno.nome);
+        }
+        if (aluno.notaFinal > notaMaior) {
+            notaMaior = aluno.notaFinal;
+            strcpy(nomeMaior, aluno.nome);
+        }
+    }
+
+    if (quantidadeAlunos == 0) {
+        printf("Nao ha alunos cadastrados no arquivo!");
+    } else if (quantidadeAlunos == 1) {
+        printf("media da turma: %.2f\n", somaNotas);
+        printf("aluno com a menor nota: %s\n", nomeMaior);
+        printf("aluno com a maior nota: %s\n", nomeMaior);
+    } else {
+        media = somaNotas / quantidadeAlunos;
+        printf("Quantidade de alunos: %d\n", quantidadeAlunos);
+        printf("Media da turma: %.2f\n", media);
+        printf("Aluno com a menor nota: %s\n", nomeMenor);
+        printf("Aluno com a maior nota: %s\n", nomeMaior);
+    }
+
+    fclose(arquivo);
+    return 1;
 }
