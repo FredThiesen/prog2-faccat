@@ -23,7 +23,7 @@ int main(void) {
         int idade;
     };
 
-    struct ficha_funcionario funcionario[100];
+    struct ficha_funcionario funcionario;
 
     char operacao = 0;
 
@@ -53,12 +53,12 @@ int main(void) {
                 break;
             case 3:
                 printf("Digite o nome do funcionario: ");
-                scanf("%s", funcionario[operacao].nome);
+                scanf("%s", funcionario.nome);
                 fflush(stdin);
                 printf("Digite a idade do funcionario: ");
-                scanf("%d", &funcionario[operacao].idade);
+                scanf("%d", &funcionario.idade);
                 fflush(stdin);
-                cadastraPessoa(funcionario[operacao].nome, funcionario[operacao].idade);
+                cadastraPessoa(funcionario.nome, funcionario.idade);
                 printf("\nPressione qualquer tecla para continuar\n");
                 getchar();
                 break;
